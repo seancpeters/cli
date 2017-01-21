@@ -30,10 +30,10 @@ namespace Microsoft.DotNet.New3.Tests
             string projectType,
             bool useNuGetConfigForAspNet)
         {
-            string rootPath = TestAssetsManager.CreateTestDirectory(identifier: $"new3_{language}_{projectType}").Path;
+            string rootPath = TestAssetsManager.CreateTestDirectory(identifier: $"{language}_{projectType}").Path;
 
             new TestCommand("dotnet") { WorkingDirectory = rootPath }
-                .Execute($"new3 {projectType} -lang {language}")
+                .Execute($"new3 {projectType} -lang {language} -o {rootPath}")
                 .Should().Pass();
 
             if (useNuGetConfigForAspNet)
@@ -42,9 +42,11 @@ namespace Microsoft.DotNet.New3.Tests
                 File.Copy(configFile.FullName, Path.Combine(rootPath, "NuGet.Config"));
             }
 
-            string globalJsonPath = Path.Combine(rootPath, "global.json");
-            Assert.True(File.Exists(globalJsonPath));
-            Assert.Contains(Product.Version, File.ReadAllText(globalJsonPath));
+            // note (scp 2017-01-17): we keep going back & forth whether to have global.json in the templates.
+            //  at this point we do not, but when we do, this part of the test will become valid again.
+            //string globalJsonPath = Path.Combine(rootPath, "global.json");
+            //Assert.True(File.Exists(globalJsonPath));
+            //Assert.Contains(Product.Version, File.ReadAllText(globalJsonPath));
 
             new TestCommand("dotnet")
                 .WithWorkingDirectory(rootPath)
