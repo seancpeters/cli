@@ -10,7 +10,7 @@ using Microsoft.DotNet.Cli.Utils;
 
 namespace Microsoft.DotNet.New.Tests
 {
-    public class GivenThatIWantANewAppWithSpecifiedType : NewTestBase
+    public class GivenThatIWantANewAppWithSpecifiedType : TestBase
     {
         [Theory]
         [InlineData("C#", "console", false)]
@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.New.Tests
             string rootPath = TestAssetsManager.CreateTestDirectory(identifier: $"{language}_{projectType}").Path;
 
             new TestCommand("dotnet") { WorkingDirectory = rootPath }
-                .Execute($"new {projectType} -lang {language} -o {rootPath}")
+                .Execute($"new {projectType} -lang {language} -o {rootPath} --debug:ephemeral-hive")
                 .Should().Pass();
 
             if (useNuGetConfigForAspNet)
@@ -41,12 +41,6 @@ namespace Microsoft.DotNet.New.Tests
                 var configFile = new FileInfo(Path.Combine(rootPath,"..","..","..","..","NuGet.tempaspnetpatch.config"));
                 File.Copy(configFile.FullName, Path.Combine(rootPath, "NuGet.Config"));
             }
-
-            // note (scp 2017-01-17): we keep going back & forth whether to have global.json in the templates.
-            //  at this point we do not, but when we do, this part of the test will become valid again.
-            //string globalJsonPath = Path.Combine(rootPath, "global.json");
-            //Assert.True(File.Exists(globalJsonPath));
-            //Assert.Contains(Product.Version, File.ReadAllText(globalJsonPath));
 
             new TestCommand("dotnet")
                 .WithWorkingDirectory(rootPath)
