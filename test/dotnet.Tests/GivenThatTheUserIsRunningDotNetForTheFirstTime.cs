@@ -11,9 +11,11 @@ using Microsoft.DotNet.Tools.Test.Utilities;
 using Xunit;
 using FluentAssertions;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace Microsoft.DotNet.Tests
 {
-	public class GivenThatTheUserIsRunningDotNetForTheFirstTime : TestBase
+    public class GivenThatTheUserIsRunningDotNetForTheFirstTime : TestBase
     {
         private static CommandResult _firstDotnetNonVerbUseCommandResult;
         private static CommandResult _firstDotnetVerbUseCommandResult;
@@ -31,7 +33,7 @@ namespace Microsoft.DotNet.Tests
             command.Environment["SkipInvalidConfigurations"] = "true";
 
             _firstDotnetNonVerbUseCommandResult = command.ExecuteWithCapturedOutput("--info");
-            _firstDotnetVerbUseCommandResult = command.ExecuteWithCapturedOutput("new");
+            _firstDotnetVerbUseCommandResult = command.ExecuteWithCapturedOutput("new --debug:ephemeral-hive");
 
             _nugetCacheFolder = new DirectoryInfo(testNugetCache);
         }        
@@ -77,13 +79,13 @@ A command is running to initially populate your local package cache, to improve 
                      .And.NotContain("Restore completed in");
         }
 
-    	[Fact]
-    	public void ItCreatesASentinelFileUnderTheNuGetCacheFolder()
-    	{
+        [Fact]
+        public void ItCreatesASentinelFileUnderTheNuGetCacheFolder()
+        {
             _nugetCacheFolder
                 .Should()
-                .HaveFile($"{GetDotnetVersion()}.dotnetSentinel");            
-    	}
+                .HaveFile($"{GetDotnetVersion()}.dotnetSentinel");
+        }
 
         [Fact]
         public void ItRestoresTheNuGetPackagesToTheNuGetCacheFolder()
@@ -93,7 +95,6 @@ A command is running to initially populate your local package cache, to improve 
                 "microsoft.netcore.app",
                 "microsoft.aspnetcore.diagnostics",
                 "microsoft.aspnetcore.mvc",
-                "microsoft.aspnetcore.razor.tools",
                 "microsoft.aspnetcore.routing",
                 "microsoft.aspnetcore.server.iisintegration",
                 "microsoft.aspnetcore.server.kestrel",
@@ -104,7 +105,7 @@ A command is running to initially populate your local package cache, to improve 
                 "microsoft.extensions.logging.console",
                 "microsoft.extensions.logging.debug",
                 "microsoft.extensions.options.configurationextensions",
-                "microsoft.visualstudio.web.browserlink.loader",
+                "microsoft.visualstudio.web.browserlink",
             };
 
             _nugetCacheFolder
@@ -117,14 +118,14 @@ A command is running to initially populate your local package cache, to improve 
 
             _nugetCacheFolder
                 .GetDirectory("microsoft.aspnetcore.mvc")
-                .Should().HaveDirectories(new string[] { "1.0.1", "1.1.0" });
+                .Should().HaveDirectories(new string[] { "1.0.2", "1.1.1" });
         }
 
         private string GetDotnetVersion()
-    	{
-    		return new DotnetCommand().ExecuteWithCapturedOutput("--version").StdOut
-    			.TrimEnd(Environment.NewLine.ToCharArray());
-    	}
+        {
+            return new DotnetCommand().ExecuteWithCapturedOutput("--version").StdOut
+                .TrimEnd(Environment.NewLine.ToCharArray());
+        }
 
         private static string NormalizeLineEndings(string s)
         {

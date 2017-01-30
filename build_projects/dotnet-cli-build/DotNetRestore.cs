@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.Cli.Build
 {
-    public class DotNetRestore : DotNetTool
+    public class DotNetRestore : DotNetMSBuildTool
     {
         protected override string Command
         {
@@ -12,8 +12,10 @@ namespace Microsoft.DotNet.Cli.Build
 
         protected override string Args
         {
-            get { return $"{GetProjectPath()} {GetSource()} {GetPackages()} {GetSkipInvalidConfigurations()} {GetRuntime()} {GetAdditionalParameters()}"; }
+            get { return $"{base.Args} {GetProjectPath()} {GetConfigFile()} {GetSource()} {GetPackages()} {GetSkipInvalidConfigurations()} {GetRuntime()} {GetAdditionalParameters()}"; }
         }
+
+        public string ConfigFile { get; set; }
 
         public string AdditionalParameters { get; set; }
 
@@ -26,6 +28,16 @@ namespace Microsoft.DotNet.Cli.Build
         public bool SkipInvalidConfigurations { get; set; }
         
         public string Runtime { get; set; }
+
+        private string GetConfigFile()
+        {
+            if (!string.IsNullOrEmpty(ConfigFile))
+            {
+                return $"--configfile {ConfigFile}";
+            }
+
+            return null;
+        }
 
         private string GetSource()
         {

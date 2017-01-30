@@ -46,9 +46,10 @@ namespace Microsoft.DotNet.Cli.Build.Tests
             string dir = "pkgs";
             string args = $"--packages {dir}";
 
-            new NewCommand()
+            string newArgs = $"console -o \"{rootPath}\" --debug:ephemeral-hive";
+            new NewCommandShim()
                 .WithWorkingDirectory(rootPath)
-                .Execute()
+                .Execute(newArgs)
                 .Should()
                 .Pass();
 
@@ -71,6 +72,26 @@ namespace Microsoft.DotNet.Cli.Build.Tests
             outputRunCommand.ExecuteWithCapturedOutput(outputDll)
                 .Should().Pass()
                      .And.HaveStdOutContaining("Hello World");
+        }
+
+        [Fact]
+        public void ItPrintsBuildSummary()
+        {
+            var testAppName = "MSBuildTestApp";
+            var testInstance = TestAssets.Get(testAppName)
+                .CreateInstance(testAppName)
+                .WithSourceFiles()
+                .WithRestoreFiles();
+
+            string expectedBuildSummary = @"Build succeeded.
+    0 Warning(s)
+    0 Error(s)";
+
+            var cmd = new BuildCommand()
+                .WithWorkingDirectory(testInstance.Root)
+                .ExecuteWithCapturedOutput();
+            cmd.Should().Pass();
+            cmd.StdOut.Should().ContainVisuallySameFragment(expectedBuildSummary);
         }
     }
 }

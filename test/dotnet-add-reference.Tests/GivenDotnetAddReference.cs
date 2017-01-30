@@ -58,9 +58,10 @@ Additional Arguments:
 
             try
             {
-                new NewCommand()
+                string args = $"classlib -o \"{dir.Path}\" --debug:ephemeral-hive";
+                new NewCommandShim()
                     .WithWorkingDirectory(dir.Path)
-                    .ExecuteWithCapturedOutput("-t Lib")
+                    .ExecuteWithCapturedOutput(args)
                 .Should().Pass();
             }
             catch (System.ComponentModel.Win32Exception e)
@@ -534,51 +535,6 @@ Reference `DotnetAddP2PProjects\ValidRef\ValidRef.csproj` added to the project."
             var csproj = lib.CsProj();
             csproj.NumberOfItemGroupsWithoutCondition().Should().Be(noCondBefore + 1);
             csproj.NumberOfProjectReferencesWithIncludeContaining(setup.ValidRefCsprojName).Should().Be(1);
-        }
-
-        [Fact]
-        public void ItAddsRefBetweenImports()
-        {
-            var lib = NewLibWithFrameworks();
-            var setup = Setup();
-
-            var cmd = new AddReferenceCommand()
-                .WithWorkingDirectory(lib.Path)
-                .WithProject(lib.CsProjName)
-                .Execute($"\"{setup.ValidRefCsprojPath}\"");
-            cmd.Should().Pass();
-            cmd.StdOut.Should().Be("Reference `DotnetAddP2PProjects\\ValidRef\\ValidRef.csproj` added to the project.");
-            cmd.StdErr.Should().BeEmpty();
-
-            int state = 0;
-            foreach (var el in lib.CsProj().AllChildren)
-            {
-                var import = el as ProjectImportElement;
-                var projRef = el as ProjectItemElement;
-                switch (state)
-                {
-                    case 0:
-                        if (import != null && import.Project.EndsWith(".props"))
-                        {
-                            state++;
-                        }
-                        break;
-                    case 1:
-                        if (projRef != null && projRef.ItemType == "ProjectReference" && projRef.Include.Contains(setup.ValidRefCsprojName))
-                        {
-                            state++;
-                        }
-                        break;
-                    case 2:
-                        if (import != null && import.Project.EndsWith(".targets"))
-                        {
-                            state++;
-                        }
-                        break;
-                }
-            }
-
-            state.Should().Be(3);
         }
 
         [Fact]

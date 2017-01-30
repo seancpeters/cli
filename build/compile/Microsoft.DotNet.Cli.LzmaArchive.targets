@@ -14,7 +14,7 @@
             DependsOnTargets="SetupNuGetPackagesArchiveInputsOutputs;
                               SetupAzureBlobInformation;
                               GenerateNuGetPackagesArchive"
-            Condition=" '$(UploadNuGetPackagesArchiveToAzure)' == 'true' And  '$(PUBLISH_TO_AZURE_BLOB)' != '' ">
+            Condition=" '$(UploadNuGetPackagesArchiveToAzure)' == 'true' And  '$(PUBLISH_LZMA_TO_AZURE_BLOB)' != '' ">
       <ItemGroup>
         <NuGetPackagesArchiveToUpload Include="$(IntermediateArchive)" />
       </ItemGroup>
@@ -72,7 +72,8 @@
       <MakeDir Directories="@(NuGetPackagesArchiveDirectory)"/>
 
       <DotNetNew ToolPath="$(Stage2Directory)"
-                 TemplateType="Web"
+                 TemplateType="Mvc"
+                 TemplateArgs="-au Individual --debug:ephemeral-hive"
                  WorkingDirectory="$(NuGetPackagesArchiveProject)/Web" />
 
       <DotNetRestore ToolPath="$(Stage2Directory)"
@@ -81,7 +82,8 @@
                      WorkingDirectory="$(NuGetPackagesArchiveProject)/Web" />
 
       <DotNetNew ToolPath="$(Stage2Directory)"
-                 TemplateType="Web1.1"
+                 TemplateType="Mvc"
+                 TemplateArgs="-au Individual -f 1.1 --debug:ephemeral-hive"
                  WorkingDirectory="$(NuGetPackagesArchiveProject)/Web1.1" />
 
       <DotNetRestore ToolPath="$(Stage2Directory)"
@@ -93,16 +95,19 @@
 
       <Message Text="Publishing Archiver" />
 
-      <DotNetPublish ToolPath="$(Stage0Directory)"
+      <DotNetPublish ToolPath="$(Stage2Directory)"
                      WorkingDirectory="$(RepoRoot)/tools/Archiver"
                      Output="$(ToolsOutputDirectory)"
                      Configuration="$(Configuration)" />
 
-      <Exec Command="$(DotnetStage0) $(ArchiverDll) -a $(IntermediateArchive) $(NuGetPackagesArchiveFolder)" />
+      <Exec Command="$(DotnetStage2) $(ArchiverDll) -a $(IntermediateArchive) $(NuGetPackagesArchiveFolder)" />
     </Target>
 
     <Target Name="SetupNuGetPackagesArchiveInputsOutputs"
             DependsOnTargets="Prepare;SetupStage;SetupAzureBlobInformation">
+      <GenerateNuGetPackagesArchiveVersion ToolPath="$(Stage2Directory)">
+        <Output TaskParameter="Version" PropertyName="NuGetPackagesArchiveVersion"/>
+      </GenerateNuGetPackagesArchiveVersion>
       <PropertyGroup>
         <NugetPackagesArchiveName>nuGetPackagesArchive.$(NuGetPackagesArchiveVersion).lzma</NugetPackagesArchiveName>
         <NuGetPackagesArchiveProject>$(IntermediateDirectory)/NuGetPackagesArchiveProject</NuGetPackagesArchiveProject>
